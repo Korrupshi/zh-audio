@@ -2,6 +2,8 @@
 
 ## Bugs:
 - Audio gets trimmed in seconds, this means the sentences get cut short: 
+- Converting using ffmpeg is too slow, is there a way to save directly as AAC or MP3 using Java?
 
 ## TODO:
-- Sentences first need sorting and keep_sentences made, then loop over subtitles
+- Merge all steps into one script pipeline
+- Maybe turn into cmd script?

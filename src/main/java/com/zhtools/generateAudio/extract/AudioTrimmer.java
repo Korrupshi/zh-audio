@@ -1,10 +1,25 @@
 // https://stackoverflow.com/questions/7546010/obtaining-an-audioinputstream-upto-some-x-bytes-from-the-original-cutting-an-au/7547123#7547123
 package com.zhtools.generateAudio.extract;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+
+// import java.io.;
 import javax.sound.sampled.*;
 
-class AudioTrimmer {
+public class AudioTrimmer {
+
+  public static void wavToM4a(String inputPath) throws IOException, InterruptedException{
+    String outputPath = inputPath.replace(".wav", ".m4a");
+    ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-i", inputPath, "-c:a", "aac", "-b:a", "128k", outputPath);
+    Process process = pb.start();
+    process.waitFor();
+
+    // Delete wav file
+    // File inputFile = new File(inputPath);
+    // inputFile.delete();
+}
+
     public static AudioInputStream loadAudio(File audioFile) throws UnsupportedAudioFileException, IOException {
       AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
       return audioStream;
@@ -16,8 +31,7 @@ class AudioTrimmer {
       return format;
   }
     
-    // public static void trimAudio(AudioInputStream inputStream, AudioFormat format,String destinationFileName, int startSeconds, int endSeconds) {
-    public static void trimAudio(String sourceFileName, String destinationFileName, int startSeconds, int endSeconds) {
+    public static void trimAndExportAudio(String sourceFileName, String destinationFileName, int startSeconds, int endSeconds) {
         int secondsToCopy = endSeconds - startSeconds;
         AudioInputStream inputStream = null;
         AudioInputStream shortenedStream = null;

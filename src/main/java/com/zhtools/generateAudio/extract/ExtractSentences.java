@@ -3,11 +3,15 @@ package com.zhtools.generateAudio.extract;
 // My functions
 import com.zhtools.generateAudio.utils.Utils;
 
+import java.io.BufferedWriter;
 // IO
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 // Data types
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,35 +129,77 @@ public class ExtractSentences {
         // Get input audio file
         String audioPath = String.format(".\\downloads\\%s\\%s.wav", folderName, fileName);
         
-        // Output destination
-        String dstPath = String.format(".\\audio\\%s", fileName);
-
         // For each subtitle line with timestamp, find core sentences
-        for (int n = 0; n < subtitles.size(); n++) {
-            Tuple<String, String, String> subtitle = subtitles.get(n);
-            String sentence = subtitle.sentence;
+        // for (int n = 0; n < subtitles.size(); n++) {
+        //     Tuple<String, String, String> subtitle = subtitles.get(n);
+        //     String sentence = subtitle.sentence;
             
-            // Remove whitespace
-            sentence = sentence.replace(" ", "");
+        //     // Remove whitespace
+        //     sentence = sentence.replace(" ", "");
             
-            if(keepSentences.contains(sentence)){
-                String start = subtitle.start;
-                String end = subtitle.end;
-                // Convert to sec
-                int startSeconds = Integer.parseInt(start.substring(0, 2)) * 3600 +
-                        Integer.parseInt(start.substring(3, 5)) * 60 +
-                        (int) Float.parseFloat(start.substring(6));
-                int endSeconds = (int) Math.ceil(Integer.parseInt(end.substring(0, 2)) * 3600 +
-                        Integer.parseInt(end.substring(3, 5)) * 60 +
-                        Float.parseFloat(end.substring(6)));
+        //     if(keepSentences.contains(sentence)){
+        //         String start = subtitle.start;
+        //         String end = subtitle.end;
+        //         // Convert to sec
+        //         int startSeconds = Integer.parseInt(start.substring(0, 2)) * 3600 +
+        //                 Integer.parseInt(start.substring(3, 5)) * 60 +
+        //                 (int) Float.parseFloat(start.substring(6));
+        //         int endSeconds = (int) Math.ceil(Integer.parseInt(end.substring(0, 2)) * 3600 +
+        //                 Integer.parseInt(end.substring(3, 5)) * 60 +
+        //                 Float.parseFloat(end.substring(6)));
 
-                // output file
-                String finalPath = String.format("%s\\%s.wav", dstPath, sentence);
+        //         // output file
+        //         String finalPath = String.format("%s\\%s.wav", outputPath, sentence);
 
-                // Trim and and export audio
-                AudioTrimmer.trimAudio(audioPath, finalPath, startSeconds, endSeconds);
+        //         // Trim and and export audio
+        //         AudioTrimmer.trimAndExportAudio(audioPath, finalPath, startSeconds, endSeconds);
+                
+        //     }
+        //     }
+
+            // # 4. Get missing words
+            List<String> strings = new ArrayList<>();
+            String string = "";
+            int maxLength = 0;
+            Set<String> missingWordsSet = new HashSet<>(missingWords);
+            for (int i = 0; i < missingWordsSet.size(); i++) {
+                String word = (String) missingWordsSet.toArray()[i];
+                int length = word.length() + 1; // +1 because we add a period to each word
+                if (maxLength + length > 500) {
+                    strings.add(string);
+
+                    // reset values
+                    string = "";
+                    maxLength = 0;
+                } else {
+                    string += word + "。";
+                    maxLength = string.length();
+                }
+
+                // Add the remaining string at last run
+                if (i+1 == missingWordsSet.size()) {
+                    strings.add(string);
+                }
             }
+
+            String outputMissing = "";
+            for (int i = 0; i < strings.size(); i++) {
+                outputMissing += "String " + (i+1) + "\n" + strings.get(i) + "\n";
             }
+
+            // Save missing_words
+            String missingPath = outputPath + "\\missing_words.txt";
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                            new FileOutputStream(missingPath), StandardCharsets.UTF_8))) {
+                writer.write(outputMissing);
+                System.out.println("[INFO]: " + missingWords.size() + " words need audio");
+            } catch (IOException e) {
+                System.err.println("[ERROR]: Failed to write missing_words.txt file.");
+                e.printStackTrace();
+            }
+
+
+            System.out.println(String.format("[COMPLETE]: %d sentences segmented.",keepSentences.size()));
         }
 
     private static void exportWordCounts(Map<String, Integer> wordCounts, String fileName) {
