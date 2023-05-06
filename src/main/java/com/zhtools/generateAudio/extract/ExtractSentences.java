@@ -1,34 +1,37 @@
 package com.zhtools.generateAudio.extract;
 
-// import java.io.BufferedWriter;
 import java.io.File;
-// import java.io.FileOutputStream;
-// import java.io.IOException;
-// import java.io.OutputStreamWriter;
-// import java.io.Writer;
-// import java.nio.charset.StandardCharsets;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
+// import java.util.Collections;
+// import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+// import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
+
+import org.json.JSONObject;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.huaban.analysis.jieba.JiebaSegmenter;
-// import com.huaban.analysis.jieba.SegToken;
 import com.huaban.analysis.jieba.SegToken;
 
 
 public class ExtractSentences {
     public static void main(String[] args) {
-        // path to subtitle file
-        // String src_path = ".\\downloads\\"+folder_name;
-        // String output_path = ".\\audio\\"+file_name;
-        
         // Input: Name of folder with subtitles file
         String folderName = "Candice X Mandarin";
         String fileName = "candice_ep46";
@@ -46,21 +49,39 @@ public class ExtractSentences {
         Set<String> sentences = new HashSet<>(Arrays.asList(lines));
         List<Tuple<String,String,String>> subtitleTimestamp = subtitleData.getTimestamp();
 
-        extractSentences(fileName, subtitleTimestamp);
+        extractSentences(fileName,folderName, subtitleTimestamp);
 
         // // Sort longest sentence first
-        List<String> sortedSentences = new ArrayList<>(sentences);
-        Collections.sort(sortedSentences, new Comparator<String>() {
-            @Override
-            public int compare(String s1, String s2) {
-                return Integer.compare(s2.length(), s1.length());
-            }
-        });
-        sentences = new LinkedHashSet<>(sortedSentences);
+        // List<String> sortedSentences = new ArrayList<>(sentences);
+        // Collections.sort(sortedSentences, new Comparator<String>() {
+        //     @Override
+        //     public int compare(String s1, String s2) {
+        //         return Integer.compare(s2.length(), s1.length());
+        //     }
+        // });
+        // sentences = new LinkedHashSet<>(sortedSentences);
 
     }
+
+    private static void writeJson(Map<String, Integer> wordCounts) {
+
+        // Create a Gson object with pretty printing enabled
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        // Convert the map to JSON
+        String json = gson.toJson(wordCounts);
+
+        // Write the JSON to a file
+        try {
+            FileWriter writer = new FileWriter("word_counts.json");
+            writer.write(json);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     
-    private static void extractSentences(String fileName,List<Tuple<String,String,String>> subtitles) {
+    private static void extractSentences(String fileName,String folderName,List<Tuple<String,String,String>> subtitles) {
         JiebaSegmenter segmenter = new JiebaSegmenter();
         Set<String> dictWords = DictionaryReader.fetchKeys();
         
@@ -78,6 +99,32 @@ public class ExtractSentences {
         }
 
         String text = "";
+
+        // Get input audio file
+        String audioPath = String.format(".\\downloads\\%s\\%s.wav",folderName,fileName);
+        // File audioFile = new File(audioPath);
+        // AudioInputStream audioStream = null;
+        // AudioFormat format = null;
+
+        // try {
+        //     // Load audio stream
+        //     audioStream = AudioSystem.getAudioInputStream(audioFile);
+
+        //     // Get audio format
+        //     AudioFileFormat fileFormat = AudioSystem.getAudioFileFormat(audioFile);
+        //     format = fileFormat.getFormat();
+
+           
+
+        // } catch (UnsupportedAudioFileException | IOException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
+
+        // Output destination
+        String dstPath = String.format(".\\audio\\%s",fileName);
+
+        // For each subtitle line with timestamp, find core sentences
         for (int n = 0; n < subtitles.size(); n++) {
             Tuple<String,String,String> subtitle = subtitles.get(n);
             String start = subtitle.start;
@@ -120,28 +167,52 @@ public class ExtractSentences {
                 // Add max 1 sentence per word
                 if (wordSentences.get(currentWord) == null || wordSentences.get(currentWord).isEmpty()) {
                     // Convert timestamp to ms
-                    double start_time = Math.round((Integer.parseInt(start.substring(0, 2)) * 3600
-                            + Integer.parseInt(start.substring(3, 5)) * 60 + Float.parseFloat(start.substring(6))) * 1000);
-                    double end_time = Math.round((Integer.parseInt(end.substring(0, 2)) * 3600
-                            + Integer.parseInt(end.substring(3, 5)) * 60 + Float.parseFloat(end.substring(6))) * 1000);
+                    // double start_time = Math.round((Integer.parseInt(start.substring(0, 2)) * 3600
+                    //         + Integer.parseInt(start.substring(3, 5)) * 60 + Float.parseFloat(start.substring(6))) * 1000);
+                    // double end_time = Math.round((Integer.parseInt(end.substring(0, 2)) * 3600
+                    //         + Integer.parseInt(end.substring(3, 5)) * 60 + Float.parseFloat(end.substring(6))) * 1000);
+                    // wordSentences.computeIfAbsent(currentWord, k -> new ArrayList<>()).add(sentence);
+
+                    // Convert to sec
+                    int startSeconds = Integer.parseInt(start.substring(0, 2)) * 3600 +
+                    Integer.parseInt(start.substring(3, 5)) * 60 +
+                                    (int) Float.parseFloat(start.substring(6));
+                    int endSeconds = (int) Math.ceil(Integer.parseInt(end.substring(0, 2)) * 3600 +
+                                    Integer.parseInt(end.substring(3, 5)) * 60 +
+                                    Float.parseFloat(end.substring(6)));
+
+                    // int startMs = startSeconds * 1000;
+                    // int endMs = endSeconds * 1000;
+
                     wordSentences.computeIfAbsent(currentWord, k -> new ArrayList<>()).add(sentence);
 
+
                     // Add used sentence to set
-                    System.out.println(sentence);
                     keepSentences.add(sentence);
-                        }
-                    }
 
-                // Write the text to a file
-                // String outputFilePath = outputDir.getAbsolutePath() + File.separator + "subtitles.txt";
-                // try (Writer writer = new BufferedWriter(
-                //         new OutputStreamWriter(new FileOutputStream(outputFilePath), StandardCharsets.UTF_8))) {
-                //     writer.write(text);
-                // } catch (IOException e) {
-                //     e.printStackTrace();
-                // }
+                    // output file
+                    String finalPath =  String.format("%s\\%s.wav",dstPath,sentence);
 
-                
+                     // Trim and and export audio
+                    AudioTrimmer.trimAudio(audioPath, finalPath, startSeconds, endSeconds);
+                    // AudioTrimmer.trimAudio(audioStream,format, finalPath, startSeconds, endSeconds);
+                }
             }
+            
+            // Write the text to a file
+            // String outputFilePath = outputDir.getAbsolutePath() + File.separator + "subtitles.txt";
+            // try (Writer writer = new BufferedWriter(
+                //         new OutputStreamWriter(new FileOutputStream(outputFilePath), StandardCharsets.UTF_8))) {
+                    //     writer.write(text);
+                    // } catch (IOException e) {
+                        //     e.printStackTrace();
+                        // }
+                        
+                        
+                    }
+                    System.out.println(keepSentences.size());
+
+                    // Export word counts json
+                    writeJson(wordCounts);
         }
     }

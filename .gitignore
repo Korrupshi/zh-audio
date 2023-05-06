@@ -2,3 +2,7 @@
 .vscode
 audio
 downloads
+backup
+
+# Files
+out.wav
