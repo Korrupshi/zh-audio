@@ -33,15 +33,16 @@ public class ExtractSentences {
     /*
      * 1. Extract and parse subtitles from VTT file 
      * 2. Create wordsSentence map, sentence to keep, and wordCounts
-     *      - Get the words missing audio
      *      - Export word_counts.json, subtitles.txt, missing_words.txt
      * 3. Loop over subtitles to extract audio and kept sentence
      *      - export audio
+     * 4. Get missing words and export
      */
-    public static void main(String[] args) {
+    public static void extractSentenceAudio(String folderName, String fileName) {
+        System.out.println("2. Extracting sentence audio...");
         // # 1. Extract and parse subtitles from VTT file
-        String folderName = "Candice X Mandarin";
-        String fileName = "candice_ep46";
+        // String folderName = "Candice X Mandarin";
+        // String fileName = "candice_ep46";
 
         // Load subtitle file (.vtt)
         String vttRaw = SubtitleReader.readVTT(folderName, fileName);
@@ -130,32 +131,32 @@ public class ExtractSentences {
         String audioPath = String.format(".\\downloads\\%s\\%s.wav", folderName, fileName);
         
         // For each subtitle line with timestamp, find core sentences
-        // for (int n = 0; n < subtitles.size(); n++) {
-        //     Tuple<String, String, String> subtitle = subtitles.get(n);
-        //     String sentence = subtitle.sentence;
+        for (int n = 0; n < subtitles.size(); n++) {
+            Tuple<String, String, String> subtitle = subtitles.get(n);
+            String sentence = subtitle.sentence;
             
-        //     // Remove whitespace
-        //     sentence = sentence.replace(" ", "");
+            // Remove whitespace
+            sentence = sentence.replace(" ", "");
             
-        //     if(keepSentences.contains(sentence)){
-        //         String start = subtitle.start;
-        //         String end = subtitle.end;
-        //         // Convert to sec
-        //         int startSeconds = Integer.parseInt(start.substring(0, 2)) * 3600 +
-        //                 Integer.parseInt(start.substring(3, 5)) * 60 +
-        //                 (int) Float.parseFloat(start.substring(6));
-        //         int endSeconds = (int) Math.ceil(Integer.parseInt(end.substring(0, 2)) * 3600 +
-        //                 Integer.parseInt(end.substring(3, 5)) * 60 +
-        //                 Float.parseFloat(end.substring(6)));
+            if(keepSentences.contains(sentence)){
+                String start = subtitle.start;
+                String end = subtitle.end;
+                // Convert to sec
+                int startSeconds = Integer.parseInt(start.substring(0, 2)) * 3600 +
+                        Integer.parseInt(start.substring(3, 5)) * 60 +
+                        (int) Float.parseFloat(start.substring(6));
+                int endSeconds = (int) Math.ceil(Integer.parseInt(end.substring(0, 2)) * 3600 +
+                        Integer.parseInt(end.substring(3, 5)) * 60 +
+                        Float.parseFloat(end.substring(6)));
 
-        //         // output file
-        //         String finalPath = String.format("%s\\%s.wav", outputPath, sentence);
+                // output file
+                String finalPath = String.format("%s\\%s.wav", outputPath, sentence);
 
-        //         // Trim and and export audio
-        //         AudioTrimmer.trimAndExportAudio(audioPath, finalPath, startSeconds, endSeconds);
+                // Trim and and export audio
+                AudioTrimmer.trimAndExportAudio(audioPath, finalPath, startSeconds, endSeconds);
                 
-        //     }
-        //     }
+            }
+            }
 
             // # 4. Get missing words
             List<String> strings = new ArrayList<>();

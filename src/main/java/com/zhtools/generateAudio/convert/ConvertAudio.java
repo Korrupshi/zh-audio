@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 
 public class ConvertAudio {
-    public static void main(String[] args) {
-        String fileName = "candice_ep46";
+
+    public static void convertToM4a(String folderName, String fileName) {
+        System.out.println("[CONVERTING]: Converting audio, please wait...");
+        // String fileName = "candice_ep46";
         String audioPath = ".\\audio\\" + fileName;
 
         File folder = new File(audioPath);
@@ -19,14 +21,16 @@ public class ConvertAudio {
                 wavToM4a(inputPath);
             } catch (IOException e) {
                 System.out.println("[ERROR]");
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             } catch (InterruptedException e) {
                 System.out.println("[ERROR]");
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
+
+        // Delete downloaded wav and sub files
+        File downloadsFolder = new File(String.format(".\\downloads\\%s",folderName));
+        deleteFolder(downloadsFolder);
 
         System.out.println("[COMPLETE]: converting complete");
 
@@ -46,6 +50,26 @@ public class ConvertAudio {
                 File inputFile = new File(inputPath);
                 inputFile.delete();
             } 
+    }
+
+    public static void deleteFolder(File folder) {
+        if (folder.exists()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        deleteFolder(file);
+                    } else {
+                        file.delete();
+                    }
+                }
+            }
+            folder.delete();
+        } else {
+            System.out.println("Cannot delete, Folder does not exist.");
         }
+    }
+
+
     }
 
