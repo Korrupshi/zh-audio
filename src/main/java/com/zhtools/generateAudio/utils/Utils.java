@@ -1,6 +1,7 @@
 package com.zhtools.generateAudio.utils;
 
 import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,7 +15,36 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.json.JSONObject;
+
 public class Utils {
+    public static Set<String> fetchDictKeys() {
+        System.setProperty("file.encoding", "UTF-8");
+        try {
+            // specify the file path
+            File file = new File(".\\data\\hashDict.json");
+            
+            // read the contents of the file into a string
+            FileReader reader = new FileReader(file);
+            char[] contents = new char[(int) file.length()];
+            reader.read(contents);
+            String jsonStr = new String(contents);
+            
+            // parse the JSON string into a JSONObject
+            JSONObject dictionary = new JSONObject(jsonStr);
+            
+            // Create a set of keys
+            Set<String> dict_keys = dictionary.keySet();
+
+            reader.close();
+
+            return dict_keys;
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     public static Set<String> getFileNames(String folderPath) {
         File folder = new File(folderPath);
         File[] files = folder.listFiles();

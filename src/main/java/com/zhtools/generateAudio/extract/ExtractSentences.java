@@ -62,7 +62,7 @@ public class ExtractSentences {
         Set<String> audioWords = Utils.getFileNames(wordsPath);
 
         // Get dictionary words
-        Set<String> dictWords = DictionaryReader.fetchKeys();
+        Set<String> dictWords = Utils.fetchDictKeys();
         JiebaSegmenter segmenter = new JiebaSegmenter();
 
         Map<String, Integer> wordCounts = new HashMap<>();
